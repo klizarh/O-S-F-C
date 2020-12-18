@@ -35,7 +35,7 @@ CRON_LOG=/home/pi/MVP/logs/cron.log
 1 6-22 * * * $MVP_SCRIPTS/Webcam.sh >> $CRON_LOG 2>&1
 
 # Render the data for the website
-10 * * * * $MVP_SCRIPTS/Render.sh >> $CRON_LOG 2>&1
-
+# 10 * * * * $MVP_SCRIPTS/Render.sh >> $CRON_LOG 2>&1
+*/10 * * * * $MVP_SCRIPTS/Render.sh >> $CRON_LOG 2>&1
 # Check CouchDB heartbeat
 10 * * * * $MVP_SCRIPTS/Heartbeat.sh >> $CRON_LOG 2>&1
