@@ -77,7 +77,7 @@ class SI7021(object):
                None
        """
 
-       print "\nGet Temp - get previous"
+       print ("\nGet Temp - get previous")
        msgs = self._i2c.get_msg([previous_temp], 3)
        if msgs == None:
            return None
@@ -95,7 +95,7 @@ class SI7021(object):
            Raises:
                 None
        """
-       print "\nGet Humidity - no hold split"
+       print ("\nGet Humidity - no hold split")
        msgs = self._i2c.msg_write([rh_no_hold])
        # need a pause here between sending the request and getting the data
        time.sleep(0.03)
@@ -137,21 +137,16 @@ class SI7021(object):
            Raises:
                None
        """
-       print "\nGet Revision"
+       print ("\nGet Revision")
        msgs = self._i2c.get_msg([firm_rev_1_1, firm_rev_1_2], 3)
-       # Need to test, may error out on some conditions
-       rev = None
-       if not ((msgs is None) or (msgs[1].data is None)):
-          rev = msgs[1].data[0]
-          if rev == 0xFF:
-              print "version 1.0"
-          elif rev == 0x20:
-              print "version 2.0"
-          else:
-              print "Unknown"
+       rev = msgs[1].data[0]
+       if rev == 0xFF:
+           print ("version 1.0")
+       elif rev == 0x20:
+           print ("version 2.0")
        else:
-          print "No Revision Data Available"
-          return rev        
+           print ("Unknown")
+       return rev        
 
    def get_id1(self):
        """Print the first part of the chips unique id
@@ -162,11 +157,11 @@ class SI7021(object):
            Raises:
                 None
        """
-       print "\nGet ID 1"
+       print ("\nGet ID 1")
        msgs = self._i2c.get_msg([read_id_1_1, read_id_1_2], 4)
        ret= msgs[1].data
        for data in ret:
-           print "ID", hex(data)
+           print ("ID", hex(data))
 
    def get_id2(self):
        """Print the second part of the chips unique id
@@ -179,22 +174,22 @@ class SI7021(object):
                None
        """
            
-       print "\nGet ID 2"
+       print ("\nGet ID 2")
        msgs = self._i2c.get_msg([read_id_2_1, read_id_2_2], 4)
        ret= msgs[1].data
        for data in ret:
-           print "ID", hex(data)
+           print ("ID", hex(data))
        sna3 = msgs[1].data[0]
        if sna3 == 0x00:
-           print "Device: Engineering Sample"
+           print ("Device: Engineering Sample")
        elif sna3 == 0xFF:
-           print "Device: Engineering Sample"        
+           print ("Device: Engineering Sample")        
        elif sna3 == 0x14:
-           print "Device: SI7020"
+           print ("Device: SI7020")
        elif sna3 == 0x15:
-           print "Device: SI7021"
+           print ("Device: SI7021")
        else:
-           print "Unknown"
+           print ("Unknown")
 
    def reset(self):
        """Reset the device
@@ -206,9 +201,9 @@ class SI7021(object):
                None
        """
             
-       print "\nReset"
+       print ("\nReset")
        rev_1 = self._i2c.msg_write([reset_cmd])
-       print "Reset: ", rev_1
+       print ("Reset: ", rev_1)
     
 def test():
     """Test the SI7021 functions
@@ -220,25 +215,25 @@ def test():
             None
    """
     si = SI7021()
-    print "\nTest Humidity - split"
+    print ("\nTest Humidity - split")
     rh = si.get_humidity()        
     if rh != None:
         print('Humidity : %.2f %%' % rh)
     else:
-        print "Error getting Humidity"
+        print ("Error getting Humidity")
 
-    print "\nTest Temp - split"
+    print ("\nTest Temp - split")
     temp = si.get_tempC()
     if temp == None:
-        print "Error getting Temp"
+        print ("Error getting Temp")
     else:        
         print('Temp C: %.2f C' % temp)        
 
 
-    print "\nTest Temp - previous"
+    print ("\nTest Temp - previous")
     temp = si.get_tempC_prior()
     if temp == None:
-        print "Error getting Temp"
+        print ("Error getting Temp")
     else:        
         print('Temp C: %.2f C' % temp)
 

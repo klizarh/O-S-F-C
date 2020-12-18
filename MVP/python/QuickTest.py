@@ -40,21 +40,21 @@ def test():
            Raises:
                None
     """    
-    print "\nRecorder Test"
-    recorder_test()
-    print "\nTest JSON Utility"
+    print ("\nRecorder Test")
+    """recorder_test()"""
+    print ("\nTest JSON Utility")
     json_test()
-    print "\nTest CouchDB"
+    print ("\nTest CouchDB")
     couch_test()
-    print "\nTest Relay"
+    print ("\nTest Relay")
     relay_test()
-    print "\nTest Lights"
+    print ("\nTest Lights")
     light_test()
-    print "\nTest Sensor Logging"
+    print ("\nTest Sensor Logging")
     sens_test()
-    print "\nTest Fan"
+    print ("\nTest Fan")
     fan_test()
-    print "Test Thermostat"
+    print ("Test Thermostat")
     thermostat_test()
 
 

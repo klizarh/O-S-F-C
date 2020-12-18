@@ -6,6 +6,7 @@ import pygal
 from couchdb import Server
 import json
 from datetime import datetime
+from MVP_Util import UTCStrToLDT
 
 #Use a view in CouchDB to get the data
 #use the first key for attribute type
@@ -29,7 +30,7 @@ def buildChart(data):
     for row in data:
 #        print row["start_date"]["timestamp"], row["subject"]["attribute"]["value"]
         v_lst.append(float(row["subject"]["attribute"]["value"]))
-        ts_lst.append(row["start_date"]["timestamp"])
+        ts_lst.append(UTCStrToLDT(row["start_date"]["timestamp"]))
 
 
     line_chart = pygal.Line()

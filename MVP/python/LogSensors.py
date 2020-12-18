@@ -15,12 +15,12 @@ def log_sensors(test = False):
         status = 'Success'
         if test:
             status = 'Test'
-        saveList(['Environment_Observation', '', 'Top', 'Air', 'Temperature', "{:10.1f}".format(temp), 'Farenheight', 'SI7021', status, ''])                
+        saveList(['Environment_Observation', '', 'Top', 'Air', 'Temperature', "{:10.1f}".format(temp), 'Farenheit', 'SI7021', status, ''])                
     except Exception as e:
         status = 'Failure'
         if test:
             status = 'Test'
-        saveList(['Environment_Observation', '', 'Top', 'Air', 'Temperature', '', 'Farenheight', 'SI7021', status, str(e)])                            
+        saveList(['Environment_Observation', '', 'Top', 'Air', 'Temperature', '', 'Farenheit', 'SI7021', status, str(e)])                            
 
     try:
         humid = si.get_humidity()

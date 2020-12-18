@@ -44,7 +44,7 @@ class I2C(object):
    #            print "Data:", hex(data)
            return msgs
        except Exception as e:
-           print e
+           print (e)
            return None
 
 
@@ -68,7 +68,7 @@ class I2C(object):
            return msgs
 
        except Exception as e:
-           print e
+           print (e)
            return None
 
    def msg_read(self, size):
@@ -94,7 +94,7 @@ class I2C(object):
            return msgs 
 
        except Exception as e:
-           print e
+           print (e)
            return None    
 
 def bytesToWord(high, low):
