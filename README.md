@@ -2,6 +2,10 @@
 
 Latest Release: 3.1.8
 
+DougA branch Change Log:
+- Fix Python
+- Fix CouchDB to download
+
 Chanage Log: 2018/11/24
  - Fix CouchDB binary download to modify ownership to couchdb
  - Chanage ownership of log files to fix write problem
