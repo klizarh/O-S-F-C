@@ -2,12 +2,6 @@
 
 Latest Release: 3.1.8
 
-<<<<<<< Updated upstream
-DougA branch Change Log:
-- Fix Python
-- Fix CouchDB to download
-
-=======
 
 DougA branch 
 Change log 20 Jan 2021:
