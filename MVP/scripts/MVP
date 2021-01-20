@@ -1,0 +1,29 @@
+# file to control the logrotate function. man logrotate.conf
+# move to correct folder and change permissions:
+# 	cp MVP /etc/logrotate.d/
+# 	chmod 644 /etc/logrotate.d/MVP
+#	chown root.root /etc/logrotate.d/MVP
+
+compress
+
+/home/pi/MVP/logs/cron.log
+{
+	rotate 7
+	daily
+	delaycompress
+	missingok
+	notifempty
+}
+
+/home/pi/MVP/logs/couchdb.log
+/home/pi/MVP/logs/heartbeat.log
+/home/pi/MVP/logs/mvp.log
+/home/pi/MVP/logs/server.log
+/home/pi/MVP/logs/startup.log
+{
+	rotate 4
+	weekly
+	delaycompress
+	missingok
+	notifempty
+}

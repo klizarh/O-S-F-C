@@ -2,10 +2,28 @@
 
 Latest Release: 3.1.8
 
+<<<<<<< Updated upstream
 DougA branch Change Log:
 - Fix Python
 - Fix CouchDB to download
 
+=======
+
+DougA branch 
+Change log 20 Jan 2021:
+ - Fix python
+	- StartUp.py add Try/Except when the DB is opened.
+	- Add datetime to INFO level logging
+	- Add logrotate file to 'scripts' and copy to logrotate.d folder (see "MVP" file)
+
+Change Log 18 Dec 2020:
+
+ - Fix Python
+ - Fix CouchDB to download
+ - Add personalizization to 'About' web page
+ 
+master branch
+>>>>>>> Stashed changes
 Chanage Log: 2018/11/24
  - Fix CouchDB binary download to modify ownership to couchdb
  - Chanage ownership of log files to fix write problem

@@ -12,7 +12,9 @@ from couchdb import Server
 import json
 from datetime import datetime
 from MVP_Util import UTCStrToLDT
+from LogUtil import get_logger
 
+logger = get_logger('TempChart')
 #Use a view in CouchDB to get the data
 #use the first key for attribute type
 #order descending so when limit the results will get the latest at the top
@@ -54,19 +56,23 @@ def buildTempChart():
     data=getResults(True)
     r_cnt=len(data)    
     if r_cnt>0:
-        print "Records: ", r_cnt
+        msg = "{} {} {}".format(datetime.now(), "Records:", r_cnt)
+        logger.debug(msg)
         buildChart(data)
     else:
-        print "No records selected"
+        msg = "{} {} {}".format(datetime.now(), "No records selected:", data.reason)
+        logger.warning(msg)
 
 def test():
     data=getResults()
     if data.status_code == 200:
-        print "Records: ", len(data.json()["docs"])
+        msg = "{} {} {}".format(datetime.now(), "Records:", len(data.json()["docs"]))
+        logger.debug(msg)                                
         buildChart(data)
     else:
-        print "No Data, Reason: ", data.reason
-
+        msg = "{} {} {}".format(datetime.now(), "No Data, Reason:", data.reason)
+        logger.debug(msg)
+        
 if __name__=="__main__":
     buildTempChart()
 

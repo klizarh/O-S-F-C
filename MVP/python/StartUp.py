@@ -12,6 +12,9 @@ from LogUtil import get_logger
 
 logger = get_logger()
 
+m = "{} {}".format("StartUp time: ", datetime.now())
+logger.info(m)
+
 def check(test=False):
     """Main function to run what needs to be done at restart
     Args:

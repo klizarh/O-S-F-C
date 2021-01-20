@@ -6,6 +6,7 @@
 
 import os
 from LogUtil import get_logger
+from datetime import datetime
 
 class CouchHeartbeat(object):
     """Heartbeat object    """
@@ -33,9 +34,11 @@ class CouchHeartbeat(object):
         cmd = 'curl -X GET http://localhost:5984'
         ret = os.system(cmd)
         if ret == 0:
-                self.logger.info('localhost Couch is Up')
+                msg = "{} {}".format(datetime.now(), 'localhost Couch is Up')
+                self.logger.info(msg)
         else:
-            self.logger.warning('Couch is Down')
+            msg = "{} {}".format(datetime.now(), 'Couch is Down')
+            self.logger.warning(msg)
             self.restart()
 
     def restart(self):

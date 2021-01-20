@@ -1,12 +1,17 @@
 '''
 Create demo data for testing
 '''
+from functools import partial
 
 from couchdb import Server
 from datetime import datetime
 from datetime import timedelta
 from env import env
 from LogUtil import get_logger
+
+#use the tenacity package to retry
+from tenacity import retry, stop_after_delay, wait_fixed, retry_if_exception_type
+from time import sleep
 
 NBR_PLANTS = 6
 TS = 0
@@ -27,12 +32,32 @@ db_name = 'mvp_data'
 
 usr = 'webbhm'
 pwd = 'admin'
-server = Server()
-#server.resource.credentials = (usr, pwd)
-db = server[db_name]
+
+
+# Define shorthand decorator for the used settings.
+retry_on_communication_error = partial(
+    retry,
+    stop=stop_after_delay(10),  # max. 10 seconds wait.
+    wait=wait_fixed(0.4),  # wait 400ms 
+    )()
+
 
 logger = get_logger('CouchUtil')
+server = Server()
+#server.resource.credentials = (usr, pwd)
+i = 1
 
+while i < 10:
+    try:  
+        db = server[db_name]
+    except:
+        m = "{} {} {}".format(datetime.now(), "error on opening db - retrying", i)
+        logger.warning(m)
+        sleep(1)
+        i += 1
+        continue
+    break
+    
 
 
 def processEnv(row):
@@ -144,6 +169,7 @@ def buildCore(row):
         rec['status'] = {'status':'Complete', 'status_qualifier': row[STATUS], 'comment':row[COMMENT]}
     return rec
 
+@retry_on_communication_error
 def saveList(doc):
     '''
     Convert activity list to json structure and save to database
@@ -168,6 +194,7 @@ def saveList(doc):
     rec = proc[doc[2]](doc)
     saveRec(rec)
         
+@retry_on_communication_error
 def saveRec(rec):
     '''
     Persist json structure to a database
@@ -184,25 +211,25 @@ def saveRec(rec):
 #    print rec
     global db
     id, rev = db.save(rec)
-    msg = "{} {}".format("Saved:", rec)
+    msg = "{} {} {}".format(datetime.now(),"Saved:", rec)
     logger.info(msg)
 
 #    print id, rev
 
 def test():
-    print "Env Rec"
+    print ("Env Rec")
     rec = ['Environment_Observation','', 'Left_Side', 'Air', 'Temperature', 27.5, 'fairenheight', 'SI7021', 'Success', '']
     saveList(rec)
-    print "Env Rec - Person"
+    print ("Env Rec - Person")
     rec = ['Environment_Observation','', 'Reservoir', 'Nutrient', 'pH', 5.6, 'pH',['person','hmw'], 'Success', 'from bucket']
     saveList(rec)
-    print "Agro Rec"
+    print ("Agro Rec")
     rec = ['Agronomic_Activity', 'd3ca243b-2740-4557-87f9-c07be9d929ad', 'Planted', '', '', '', '', ['person','hmw'], 'Success', '']
     saveList(rec)
-    print "Pheno Rec"
+    print ("Pheno Rec")
     rec = ['Phenotype_Observation', 'd3ca243b-2740-4557-87f9-c07be9d929ad', 1,'Plant','Weight', 125, 'g', ['person','hmw'], 'Success', '']
     saveList(rec)
-    print "State Rec"
+    print ("State Rec")
     rec = ['State_Change', '','Top', 'Light', 'state', 'ON', 'state', 'Light', 'Success', '']
     saveList(rec)
 

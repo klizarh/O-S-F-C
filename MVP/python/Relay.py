@@ -58,32 +58,32 @@ class Relay(object):
 def test():
     
     relay=Relay()
-    print "Test"
-    print "Read #3 Unknown: ", relay.get_state(Relay3)
-    print "Test Fan and Lights"
-    print "Turn Fan On"
+    print ("Test")
+    print ("Read #3 Unknown: ", relay.get_state(Relay3))
+    print ("Test Fan and Lights")
+    print ("Turn Fan On")
     relay.set_on(fanPin, True)
     time.sleep(5)
-    print "Turn Light On"
+    print ("Turn Light On")
     relay.set_state(lightPin, True)
     time.sleep(5)
-    print "Turn Fan Off"
+    print ("Turn Fan Off")
     relay.set_off(lightPin, True)
     time.sleep(5)        
-    print "Turn Light Off"
+    print ("Turn Light Off")
     relay.set_off(lightPin, True)
     time.sleep(5)
 
-    print "Conditional Turn Fan On"
+    print ("Conditional Turn Fan On")
     relay.set_state(fanPin, ON, True)
     time.sleep(5)        
-    print "Conditional Turn Fan On"
+    print ("Conditional Turn Fan On")
     relay.set_state(fanPin, ON, True)
     time.sleep(5)
-    print "Conditional Turn Fan Off"
+    print ("Conditional Turn Fan Off")
     relay.set_state(fanPin, OFF, True)
     time.sleep(5)        
-    print "Conditional Turn Fan Off"
+    print ("Conditional Turn Fan Off")
     relay.set_state(fanPin, OFF, True)
 
 def test1():

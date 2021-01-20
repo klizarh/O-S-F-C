@@ -3,6 +3,9 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+LOG_LEVEL = logging.INFO
+FILE_LEVEL = logging.WARNING
+
 def get_logger(name="MvpLogger"):
     """Create and return a logger
 
@@ -21,11 +24,11 @@ def get_logger(name="MvpLogger"):
     fmt = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
     # build logger
     logger = logging.getLogger('mvp.'+name)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(LOG_LEVEL)
 
     # Rotating File handler - only send WARNING and above
     file_handler = TimedRotatingFileHandler(fname, when="d", interval=30, backupCount=3)
-    file_handler.setLevel(logging.WARNING)
+    file_handler.setLevel(FILE_LEVEL)
     formater = logging.Formatter(fmt)
     file_handler.setFormatter(formater)
 
@@ -52,10 +55,10 @@ def test():
     Raises:
         None
     """
-    print "Test MvpLogger"
-    print "Getting logger"
+    print ("Test MvpLogger")
+    print ("Getting logger")
     logger = get_logger()
-    print "Testing output"
+    print ("Testing output")
     logger.debug("Something happening here")
     logger.info("Just thought you might like to know")
     logger.warning("Will Robinson ...")
