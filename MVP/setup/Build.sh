@@ -31,7 +31,7 @@ TARGET=/home/pi/MVP       # Location for MVP
 RELEASE=mvp             # Package (repository) to download 
 VERSION=v3.1.8         # github version to work with
 ZIP_DIR=3.1.8
-GITHUB=https://github.com/futureag/$RELEASE/archive/$VERSION.zip    # Address of Github archive
+GITHUB=https://github.com/klizarh/$RELEASE/archive/$VERSION.zip    # Address of Github archive
 
 echo $EXTRACT
 echo $TARGET
