@@ -32,11 +32,11 @@ error_exit()
 
 echo "##### Installing CouchDB #####"
 # Uncomment to compile
-#COUCH=couchBld.sh
+COUCH=couchBld.sh
 # Uncomment to download
 #COUCH=couchDwn.sh 
 # Uncomment to download
-COUCH=couchExt.sh 
+#COUCH=couchExt.sh 
 
 
 #add couchdb user and home
