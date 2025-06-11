@@ -35,8 +35,7 @@ class Light(object):
             self.logger.debug('Light already OFF - no change')
 
     def get_state(self, test=False):
-        '''Check the GPIO
-    '''
+        '''Check the GPIO'''
         return self.r.get_state(lightPin)
         
 
