@@ -7,12 +7,9 @@ from couchdb import Server
 import json
 from datetime import datetime
 from MVP_Util import UTCStrToLDT
-<<<<<<< Updated upstream
-=======
 from LogUtil import get_logger
 
 logger = get_logger('HumidityChart')
->>>>>>> Stashed changes
 
 #Use a view in CouchDB to get the data
 #use the first key for attribute type
@@ -24,7 +21,7 @@ def getResults(test=False):
     payload={"selector":{"start_date.timestamp":{"$lt":ts}, "status.status_qualifier":"Success", "activity_type":"Environment_Observation", "subject.name":"Air","subject.attribute.name": "Humidity"}, "fields":["start_date.timestamp", "subject.attribute.value"], "sort":[{"start_date.timestamp":"desc"}], "limit":250}        
     db_name = 'mvp_data'
     if test:
-        print payload
+        print(payload)
     server = Server()
     db = server[db_name]
     return db.find(payload)

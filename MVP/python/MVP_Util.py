@@ -54,12 +54,12 @@ def UTCStrToLDT(timestamp):
 
 def test():
     utc = datetime.utcnow()
-    print 'UTC', utc
-    print UTCtoLocal(utc)
+    print('UTC', utc)
+    print(UTCtoLocal(utc))
     ts = utc.isoformat()
-    print "Timestamp", ts
-    print UTCStrToLocal(ts)
-    print UTCStrToLDT(ts)
+    print("Timestamp", ts)
+    print(UTCStrToLocal(ts))
+    print(UTCStrToLDT(ts))
 
 
 if __name__=="__main__":
