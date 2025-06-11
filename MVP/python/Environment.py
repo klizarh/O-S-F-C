@@ -33,7 +33,7 @@ def setLights(on='06:30:00', off='22:00:00'):
 def prettyPrint(txt):
     '''Dump json in nice format'''
     #print type(txt)
-    print json.dumps(txt, indent=4, sort_keys=True)
+    print(json.dumps(txt, indent=4, sort_keys=True))
 
 def saveDict(name, file_name, dict):
     #print(values)

@@ -99,34 +99,34 @@ def test():
                None
     """
     fan = Fan()
-    print "Test"
-    print "State: ", fan.relay.get_state(fan.fan_relay)
-    print "Turn Fan On"
+    print("Test")
+    print("State: ", fan.relay.get_state(fan.fan_relay))
+    print("Turn Fan On")
     fan.set_fan_on()
-    print "State: ", fan.relay.get_state(fan.fan_relay)
+    print("State: ", fan.relay.get_state(fan.fan_relay))
     time.sleep(2)
 
-    print "Turn Fan Off"
+    print("Turn Fan Off")
     fan.set_fan_off()
-    print "State: ", fan.relay.get_state(fan.fan_relay)
+    print("State: ", fan.relay.get_state(fan.fan_relay))
     time.sleep(2)
 
-    print "Adj 45"
+    print("Adj 45")
     fan.adjust(45, True)
-    print "State: ", fan.relay.get_state(fan.fan_relay)
+    print("State: ", fan.relay.get_state(fan.fan_relay))
 
-    print "Adj 45"
+    print("Adj 45")
     fan.adjust(45, True)
-    print "State: ", fan.relay.get_state(fan.fan_relay)
+    print("State: ", fan.relay.get_state(fan.fan_relay))
 
-    print "Adj 10"
+    print("Adj 10")
     fan.adjust(10, True)
-    print "State: ", fan.relay.get_state(fan.fan_relay)
+    print("State: ", fan.relay.get_state(fan.fan_relay))
 
-    print "Adj 45"
+    print("Adj 45")
     fan.adjust(45, True)
-    print "State: ", fan.relay.get_state(fan.fan_relay)
-    print "Done"
+    print("State: ", fan.relay.get_state(fan.fan_relay))
+    print("Done")
 
 if __name__ == "__main__":
     test()

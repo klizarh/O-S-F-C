@@ -54,7 +54,7 @@ def buildChart(data, test=False):
     # Pivot the data by timestamp-bin with name groupings for columns
     df=df.pivot(index='timestamp', columns='name', values='value')
     if test:
-        print df
+        print(df)
 #    print df
 
 # Fill missing data with dummy value
@@ -84,7 +84,7 @@ def buildChart(data, test=False):
 # Clear index so all are columns
     d3=d1.reset_index()
     if test:
-        print d3
+        print(d3)
 
 #build chart
     line_chart = pygal.Line(range=(0, 40))
@@ -101,21 +101,21 @@ def getDewPointChart(test=False):
     data=getResults()
     r_cnt = len(data)
     if r_cnt>0:
-        print "Records: ", r_cnt
+        print("Records: ", r_cnt)
         data=cleanData(data, test)
         buildChart(data, test)
     else:
-        print "No Data"
+        print("No Data")
 
 def test():
     data=getResults()
     r_cnt = len(data)
     if r_cnt>0:
-        print "Records: ", r_cnt
+        print("Records: ", r_cnt)
         data=cleanData(data, test)
         buildChart(data, test)
     else:
-        print "No Data"
+        print("No Data")
 
 if __name__=="__main__":
     getDewPointChart()

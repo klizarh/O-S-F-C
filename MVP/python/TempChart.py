@@ -25,7 +25,7 @@ def getResults(test=False):
     payload={"selector":{"start_date.timestamp":{"$lt":ts}, "status.status_qualifier":"Success", "activity_type":"Environment_Observation", "subject.name":"Air","subject.attribute.name": "Temperature"}, "fields":["start_date.timestamp", "subject.attribute.value"], "sort":[{"start_date.timestamp":"desc"}], "limit":250}    
     db_name = 'mvp_data'
     if test:
-        print payload
+        print(payload)
     server = Server()
     db = server[db_name]
     return db.find(payload)
