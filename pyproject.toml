@@ -1,0 +1,30 @@
+[project]
+name = "mvp-food-computer"
+version = "3.2.0"
+description = "Open Source Food Computer - Raspberry Pi based hydroponic growth chamber"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.7"
+dependencies = [
+    "CouchDB>=1.2,<2.0",
+    "tenacity>=6.0",
+    "pygal>=3.0",
+    "pandas>=1.0",
+]
+
+[project.optional-dependencies]
+hardware = [
+    "RPi.GPIO",
+    "python-periphery",
+]
+charts = [
+    "pygal>=3.0",
+    "pandas>=1.0",
+]
+dev = [
+    "pytest>=7.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["MVP/python"]

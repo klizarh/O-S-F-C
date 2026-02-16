@@ -5,11 +5,13 @@
 # Date: 2/12/2018
 # This program selects pictures within a date range, then selects one per day and converts them to a GIF
 
-from moviepy.editor import ImageSequenceClip 
+from moviepy.editor import ImageSequenceClip
 import cv2
 import os
 from datetime import datetime
 from env import env
+
+_MVP_DIR = os.environ.get('MVP_DIR', '/home/pi/MVP')
 
 def makeGIF(clips, out_file):
     clips.write_gif(out_file, fps=1)
@@ -49,7 +51,7 @@ def main(test=False):
     start_date=env["trials"][1]["start_date"]
     end_date=str(datetime.now())
     # Source of images
-    dir="/home/pi/MVP/pictures_R/"
+    dir=os.path.join(_MVP_DIR, 'pictures_R', '')
     # Image type to select
     type=".jpg"
     # Resize the image to 640x480 (resizing will keep ratio with one dimension specified)
