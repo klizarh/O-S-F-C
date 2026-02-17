@@ -3,15 +3,22 @@
 # Author: Howard Webb
 # Data: 2/21/2018
 
+import os
 import uuid
 import json
+
+# Resolve the MVP python directory for writing env.py.
+# Prefer MVP_DIR env var; fall back to /home/pi/MVP for Pi compatibility.
+_MVP_DIR = os.environ.get('MVP_DIR', '/home/pi/MVP')
+_ENV_FILE = os.path.join(_MVP_DIR, 'python', 'env.py')
+
 def setup():
     '''One time setup of the environment - get UUID of Field"'''
     env={}
     env['field']=getField()
     env['thermostat'] = setTargetTemperature()
     env['lights'] = setLights()
-    saveDict('env', '/home/pi/MVP/python/env.py', env)
+    saveDict('env', _ENV_FILE, env)
 
 def getField():
     '''Create Field UUID and Plots'''

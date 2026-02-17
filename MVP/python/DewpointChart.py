@@ -4,6 +4,7 @@
 # NOTE: this chart bins data into timestamp groups and uses multiple lines of data
 # This is a test of combining temp, humidity and dewpoint
 
+import os
 import pygal
 from couchdb import Server
 import json
@@ -12,6 +13,8 @@ import pandas as pd
 import math
 from datetime import datetime
 from MVP_Util import UTCStrToLDT
+
+_MVP_DIR = os.environ.get('MVP_DIR', '/home/pi/MVP')
 
 #Use a view in CouchDB to get the data
 #use the first key for attribute type
@@ -95,7 +98,7 @@ def buildChart(data, test=False):
     line_chart.add('Humidity', [float(row) for row in d3['Humidity']], secondary=True)
     line_chart.add('Temperature',[float(row) for row in d3['Temperature']])
     line_chart.add('Dewpoint', d3['Dewpoint'])
-    line_chart.render_to_file('/home/pi/MVP/web/humidity_chart.svg')    
+    line_chart.render_to_file(os.path.join(_MVP_DIR, 'web', 'humidity_chart.svg'))
 
 def getDewPointChart(test=False):
     data=getResults()
@@ -112,8 +115,8 @@ def test():
     r_cnt = len(data)
     if r_cnt>0:
         print("Records: ", r_cnt)
-        data=cleanData(data, test)
-        buildChart(data, test)
+        data=cleanData(data, True)
+        buildChart(data, True)
     else:
         print("No Data")
 

@@ -1,0 +1,11 @@
+# Core dependencies (non-hardware)
+CouchDB>=1.2,<2.0
+tenacity>=6.0
+pygal>=3.0
+
+# Charting / data analysis
+pandas>=1.0
+
+# Hardware dependencies (Raspberry Pi only - install manually on Pi)
+# RPi.GPIO
+# python-periphery

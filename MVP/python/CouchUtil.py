@@ -1,16 +1,16 @@
 '''
-Create demo data for testing
+CouchDB utility functions for the MVP Food Computer.
+
+Provides helpers for building JSON observation records and persisting
+them to the CouchDB ``mvp_data`` database.
 '''
 from functools import partial
 
-from couchdb import Server
 from datetime import datetime
 from datetime import timedelta
 from env import env
 from LogUtil import get_logger
 
-#use the tenacity package to retry
-from tenacity import retry, stop_after_delay, wait_fixed, retry_if_exception_type
 from time import sleep
 
 NBR_PLANTS = 6
@@ -33,31 +33,60 @@ db_name = 'mvp_data'
 usr = 'webbhm'
 pwd = 'admin'
 
-
-# Define shorthand decorator for the used settings.
-retry_on_communication_error = partial(
-    retry,
-    stop=stop_after_delay(10),  # max. 10 seconds wait.
-    wait=wait_fixed(0.4),  # wait 400ms 
-    )()
-
-
 logger = get_logger('CouchUtil')
-server = Server()
-#server.resource.credentials = (usr, pwd)
-i = 1
 
-while i < 10:
-    try:  
-        db = server[db_name]
-    except:
-        m = "{} {} {}".format(datetime.now(), "error on opening db - retrying", i)
-        logger.warning(m)
-        sleep(1)
-        i += 1
-        continue
-    break
-    
+# ---------------------------------------------------------------------------
+# Lazy database connection
+# ---------------------------------------------------------------------------
+# The CouchDB connection is established on first use rather than at import
+# time.  This allows the module to be imported and its pure-logic helpers
+# (buildCore, processEnv, etc.) to be tested without a running database.
+# ---------------------------------------------------------------------------
+
+_server = None
+_db = None
+
+
+def _get_db():
+    """Return the CouchDB database handle, connecting on first call."""
+    global _server, _db
+    if _db is not None:
+        return _db
+
+    from couchdb import Server
+    _server = Server()
+    i = 1
+    while i < 10:
+        try:
+            _db = _server[db_name]
+        except Exception:
+            m = "{} {} {}".format(datetime.now(), "error on opening db - retrying", i)
+            logger.warning(m)
+            sleep(1)
+            i += 1
+            continue
+        break
+    return _db
+
+
+# ---------------------------------------------------------------------------
+# Retry decorator (requires tenacity)
+# ---------------------------------------------------------------------------
+
+try:
+    from tenacity import retry, stop_after_delay, wait_fixed
+
+    # Define shorthand decorator for the used settings.
+    retry_on_communication_error = partial(
+        retry,
+        stop=stop_after_delay(10),  # max. 10 seconds wait.
+        wait=wait_fixed(0.4),  # wait 400ms
+    )()
+except ImportError:
+    # tenacity not installed – provide a no-op decorator so the module can
+    # still be loaded in lightweight environments (testing, CI).
+    def retry_on_communication_error(fn):
+        return fn
 
 
 def processEnv(row):
@@ -73,11 +102,11 @@ def processEnv(row):
         None
 
     '''
-    
+
     rec = buildCore(row)
     rec['activity_type'] = row[ACTIVITY]
     rec['subject'] = {'name':row[SUBJECT],'attribute':{'name':row[ATTRIBUTE], 'units':row[UNITS], 'value': row[VALUE]}, 'location': row[PLOT]}
-    rec['location'] = {'field':row[FIELD]}    
+    rec['location'] = {'field':row[FIELD]}
     return rec
 
 def processState(row):
@@ -93,14 +122,14 @@ def processState(row):
         None
 
     '''
-    
+
     rec = buildCore(row)
     rec['activity_type'] = row[ACTIVITY]
     rec['subject'] = {'name':row[SUBJECT],'attribute':{'name':row[ATTRIBUTE], 'units':row[UNITS], 'value': row[VALUE]}, 'location': row[PLOT]}
-    rec['participant']= {'type':'device', 'name':row[PARTICIPANT]}    
-    rec['location'] = {'field':row[FIELD]}    
+    rec['participant']= {'type':'device', 'name':row[PARTICIPANT]}
+    rec['location'] = {'field':row[FIELD]}
     return rec
-    
+
 def processAgro(row):
     '''
     Agronomic specific processing
@@ -136,18 +165,18 @@ def processPheno(row):
         None
 
     '''
-    
+
     rec = buildCore(row)
     rec['activity_type'] = row[ACTIVITY]
     rec['subject'] = {'name':row[SUBJECT],'attribute':{'name':row[ATTRIBUTE], 'units':row[UNITS], 'value': row[VALUE]}}
-    rec['location'] = {'field':row[FIELD], 'trial':row[TRIAL], 'plot':row[PLOT]}    
+    rec['location'] = {'field':row[FIELD], 'trial':row[TRIAL], 'plot':row[PLOT]}
     return rec
 
 def buildCore(row):
     '''
     Build the core of the json structure, common elements
     Args:
-        row: list of activity 
+        row: list of activity
              [timestamp, field, activity_name, trial, plot, subject, attribute, value, units, participant, status_qualifier, comment]
              participant may be a device string, or a list: ['person':'hmw']
     Returns:
@@ -165,7 +194,7 @@ def buildCore(row):
         rec['participant']= {'type':'device', 'name':row[PARTICIPANT]}
     if len(row[COMMENT]) == 0:
         rec['status'] = {'status':'Complete', 'status_qualifier': row[STATUS]}
-    else:        
+    else:
         rec['status'] = {'status':'Complete', 'status_qualifier': row[STATUS], 'comment':row[COMMENT]}
     return rec
 
@@ -185,7 +214,7 @@ def saveList(doc):
 
     '''
     # dictionary of activity types and specific processing functions
-    proc = {'Environment_Observation':processEnv, 'State_Change':processState, 'Agronomic_Activity':processAgro, 'Phenotype_Observation':processPheno}    
+    proc = {'Environment_Observation':processEnv, 'State_Change':processState, 'Agronomic_Activity':processAgro, 'Phenotype_Observation':processPheno}
     # add timestamp and field_id
     timestamp = datetime.utcnow().isoformat()[:19]
     doc.insert(0, env['field']['field_id'])
@@ -193,7 +222,7 @@ def saveList(doc):
     # Use activity type to route processing
     rec = proc[doc[2]](doc)
     saveRec(rec)
-        
+
 @retry_on_communication_error
 def saveRec(rec):
     '''
@@ -207,14 +236,11 @@ def saveRec(rec):
         None
 
     '''
-    
-#    print rec
-    global db
+
+    db = _get_db()
     id, rev = db.save(rec)
     msg = "{} {} {}".format(datetime.now(),"Saved:", rec)
     logger.info(msg)
-
-#    print id, rev
 
 def test():
     print ("Env Rec")
@@ -233,6 +259,6 @@ def test():
     rec = ['State_Change', '','Top', 'Light', 'state', 'ON', 'state', 'Light', 'Success', '']
     saveList(rec)
 
-    
+
 if __name__=="__main__":
     test()

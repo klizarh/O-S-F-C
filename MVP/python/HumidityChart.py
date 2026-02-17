@@ -1,13 +1,16 @@
-# Temperature chart with data from CouchDB
+# Humidity chart with data from CouchDB
 # Author: Howard Webb
 # Date: 3/5/2018
 
+import os
 import pygal
 from couchdb import Server
 import json
 from datetime import datetime
 from MVP_Util import UTCStrToLDT
 from LogUtil import get_logger
+
+_MVP_DIR = os.environ.get('MVP_DIR', '/home/pi/MVP')
 
 logger = get_logger('HumidityChart')
 
@@ -46,7 +49,7 @@ def buildChart(data):
     #need to reverse order to go from earliest to latest
     v_lst.reverse()
     line_chart.add('Humidity', v_lst)
-    line_chart.render_to_file('/home/pi/MVP/web/humidity_chart.svg')
+    line_chart.render_to_file(os.path.join(_MVP_DIR, 'web', 'humidity_chart.svg'))
 
 def buildTempChart():
     data=getResults(True)

@@ -7,7 +7,7 @@ for details, see:
 
 '''
 
-import numpy as np
+import math
  
 # approximation valid for
 # 0 degC < T < 60 degC
@@ -26,7 +26,7 @@ def getDewPoint(T,RH):
     return float(Td)
  
 def gamma(T,RH):
-    g = (a * T / (b + T)) + np.log(RH/100.0)
+    g = (a * T / (b + T)) + math.log(RH/100.0)
     return g
 
 def getDewPointAprox(t, rh):
