@@ -41,6 +41,17 @@
             --color-connecting: #e9c46a;
             --color-offline: #e76f51;
 
+            /* Alert colors */
+            --color-alert-warn: #e9c46a;
+            --color-alert-warn-bg: rgba(233, 196, 106, 0.12);
+            --color-alert-critical: #e76f51;
+            --color-alert-critical-bg: rgba(231, 111, 81, 0.12);
+
+            /* Advisor severity */
+            --color-severity-ok: #2d6a4f;
+            --color-severity-warning: #e9c46a;
+            --color-severity-critical: #e76f51;
+
             /* Layout */
             --radius: 12px;
             --shadow: 0 2px 8px var(--color-shadow);
@@ -194,10 +205,12 @@
             box-shadow: var(--shadow);
             padding: 20px;
             border-left: 4px solid var(--color-border);
-            transition: box-shadow var(--transition), transform var(--transition);
+            transition: box-shadow var(--transition), transform var(--transition),
+                        background var(--transition), border-color var(--transition);
             display: flex;
             flex-direction: column;
             gap: 4px;
+            position: relative;
         }
 
         .stat-card:hover {
@@ -209,6 +222,54 @@
         .stat-card.humidity { border-left-color: var(--color-humidity); }
         .stat-card.dewpoint { border-left-color: var(--color-dewpoint); }
         .stat-card.light { border-left-color: var(--color-light); }
+
+        /* Alert states on stat cards */
+        .stat-card.alert-warn {
+            border-left-color: var(--color-alert-warn);
+            background: var(--color-alert-warn-bg);
+            animation: alert-pulse-warn 2s ease-in-out infinite;
+        }
+
+        .stat-card.alert-critical {
+            border-left-color: var(--color-alert-critical);
+            background: var(--color-alert-critical-bg);
+            animation: alert-pulse-critical 1.5s ease-in-out infinite;
+        }
+
+        @keyframes alert-pulse-warn {
+            0%, 100% { box-shadow: var(--shadow); }
+            50% { box-shadow: 0 0 12px rgba(233, 196, 106, 0.5); }
+        }
+
+        @keyframes alert-pulse-critical {
+            0%, 100% { box-shadow: var(--shadow); }
+            50% { box-shadow: 0 0 16px rgba(231, 111, 81, 0.5); }
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .alert-badge.warn {
+            display: inline-block;
+            background: var(--color-alert-warn);
+            color: #5a4a00;
+        }
+
+        .alert-badge.critical {
+            display: inline-block;
+            background: var(--color-alert-critical);
+            color: #fff;
+        }
 
         .stat-label {
             font-size: 0.8rem;
@@ -264,6 +325,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .card-title {
@@ -311,6 +374,136 @@
 
         .chart-container.hidden {
             display: none;
+        }
+
+        /* ============================================================
+           Time Range Selector
+           ============================================================ */
+        .time-range-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .time-range-btn {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            background: var(--color-bg);
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
+            line-height: 1.4;
+        }
+
+        .time-range-btn:hover {
+            border-color: var(--color-primary-light);
+            color: var(--color-primary);
+        }
+
+        .time-range-btn.active {
+            background: var(--color-primary);
+            color: #fff;
+            border-color: var(--color-primary);
+        }
+
+        /* ============================================================
+           Grow Advisor Panel
+           ============================================================ */
+        .advisor-section {
+            margin-bottom: 24px;
+        }
+
+        .advisor-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .advisor-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--color-surface);
+            border-radius: 8px;
+            border-left: 4px solid var(--color-border);
+            align-items: flex-start;
+        }
+
+        .advisor-item.severity-ok {
+            border-left-color: var(--color-severity-ok);
+        }
+
+        .advisor-item.severity-warning {
+            border-left-color: var(--color-severity-warning);
+        }
+
+        .advisor-item.severity-critical {
+            border-left-color: var(--color-severity-critical);
+        }
+
+        .advisor-severity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .severity-ok .advisor-severity-dot {
+            background: var(--color-severity-ok);
+        }
+
+        .severity-warning .advisor-severity-dot {
+            background: var(--color-severity-warning);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .severity-critical .advisor-severity-dot {
+            background: var(--color-severity-critical);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        .advisor-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .advisor-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .advisor-message {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        .advisor-metric {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: var(--color-bg);
+            color: var(--color-text-muted);
+        }
+
+        .advisor-empty {
+            text-align: center;
+            padding: 24px;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
+        .advisor-timestamp {
+            font-size: 0.72rem;
+            color: var(--color-text-muted);
+            padding: 8px 20px 12px;
+            text-align: right;
         }
 
         /* ============================================================
@@ -463,6 +656,15 @@
             .chart-container {
                 height: 220px;
             }
+
+            .time-range-group {
+                flex-wrap: wrap;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
 
         /* ============================================================
@@ -511,13 +713,15 @@
 
         <!-- Stat Cards -->
         <section class="stat-grid">
-            <div class="stat-card temp">
+            <div class="stat-card temp" id="tempCard">
+                <span class="alert-badge" id="tempAlertBadge"></span>
                 <div class="stat-label">Temperature</div>
                 <div class="stat-value" id="tempValue">--<span class="stat-unit"> &deg;C</span></div>
                 <div class="stat-updated" id="tempUpdated">Waiting for data...</div>
             </div>
 
-            <div class="stat-card humidity">
+            <div class="stat-card humidity" id="humidityCard">
+                <span class="alert-badge" id="humidityAlertBadge"></span>
                 <div class="stat-label">Humidity</div>
                 <div class="stat-value" id="humidityValue">--<span class="stat-unit"> %</span></div>
                 <div class="stat-updated" id="humidityUpdated">Waiting for data...</div>
@@ -542,7 +746,13 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Temperature</div>
-                    <div class="card-badge">Last 24 hours</div>
+                    <div class="time-range-group" id="tempTimeRange">
+                        <button class="time-range-btn" data-hours="1">1h</button>
+                        <button class="time-range-btn" data-hours="6">6h</button>
+                        <button class="time-range-btn active" data-hours="24">24h</button>
+                        <button class="time-range-btn" data-hours="168">7d</button>
+                        <button class="time-range-btn" data-hours="720">30d</button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="chart-container" id="tempChartContainer">
@@ -560,7 +770,13 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Humidity</div>
-                    <div class="card-badge">Last 24 hours</div>
+                    <div class="time-range-group" id="humidityTimeRange">
+                        <button class="time-range-btn" data-hours="1">1h</button>
+                        <button class="time-range-btn" data-hours="6">6h</button>
+                        <button class="time-range-btn active" data-hours="24">24h</button>
+                        <button class="time-range-btn" data-hours="168">7d</button>
+                        <button class="time-range-btn" data-hours="720">30d</button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="chart-container" id="humidityChartContainer">
@@ -572,6 +788,22 @@
                         </object>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Grow Advisor -->
+        <section class="advisor-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Grow Advisor</div>
+                    <div class="card-badge" id="advisorBadge">Analyzing...</div>
+                </div>
+                <div class="card-body" style="padding: 12px 20px 4px;">
+                    <div class="advisor-grid" id="advisorGrid">
+                        <div class="advisor-empty">Loading recommendations...</div>
+                    </div>
+                </div>
+                <div class="advisor-timestamp" id="advisorTimestamp"></div>
             </div>
         </section>
 
@@ -622,6 +854,10 @@
                             <span class="info-value" id="infoTargetTemp">--</span>
                         </li>
                         <li>
+                            <span class="info-label">Alert Thresholds</span>
+                            <span class="info-value" id="infoThresholds">--</span>
+                        </li>
+                        <li>
                             <span class="info-label">Last Update</span>
                             <span class="info-value" id="infoLastUpdate">--</span>
                         </li>
@@ -655,7 +891,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        MVP Food Computer Dashboard v2.0 &mdash;
+        MVP Food Computer Dashboard v3.0 &mdash;
         Open Source Controlled Environment Agriculture &mdash;
         <a href="https://github.com/futureag" target="_blank" rel="noopener">FutureAg</a>
     </footer>
@@ -675,6 +911,7 @@
         var humidityChartInstance = null;
         var pollTimer = null;
         var isFirstLoad = true;
+        var selectedHours = 24;
 
         // ============================================================
         // DOM references
@@ -684,6 +921,11 @@
             statusDot: document.getElementById('statusDot'),
             statusText: document.getElementById('statusText'),
             demoBadge: document.getElementById('demoBadge'),
+
+            tempCard: document.getElementById('tempCard'),
+            humidityCard: document.getElementById('humidityCard'),
+            tempAlertBadge: document.getElementById('tempAlertBadge'),
+            humidityAlertBadge: document.getElementById('humidityAlertBadge'),
 
             tempValue: document.getElementById('tempValue'),
             humidityValue: document.getElementById('humidityValue'),
@@ -700,6 +942,13 @@
             tempFallback: document.getElementById('tempFallback'),
             humidityFallback: document.getElementById('humidityFallback'),
 
+            tempTimeRange: document.getElementById('tempTimeRange'),
+            humidityTimeRange: document.getElementById('humidityTimeRange'),
+
+            advisorGrid: document.getElementById('advisorGrid'),
+            advisorBadge: document.getElementById('advisorBadge'),
+            advisorTimestamp: document.getElementById('advisorTimestamp'),
+
             cameraImage: document.getElementById('cameraImage'),
             cameraTimestamp: document.getElementById('cameraTimestamp'),
             cameraOverlayTime: document.getElementById('cameraOverlayTime'),
@@ -708,6 +957,7 @@
             infoFan: document.getElementById('infoFan'),
             infoLightSchedule: document.getElementById('infoLightSchedule'),
             infoTargetTemp: document.getElementById('infoTargetTemp'),
+            infoThresholds: document.getElementById('infoThresholds'),
             infoLastUpdate: document.getElementById('infoLastUpdate'),
             infoMode: document.getElementById('infoMode')
         };
@@ -725,6 +975,36 @@
                 dom.statusDot.classList.add('offline');
             }
             dom.statusText.textContent = text || state;
+        }
+
+        // ============================================================
+        // Time range selector
+        // ============================================================
+        function setupTimeRangeButtons() {
+            var groups = [dom.tempTimeRange, dom.humidityTimeRange];
+            groups.forEach(function(group) {
+                if (!group) return;
+                group.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.time-range-btn');
+                    if (!btn) return;
+                    var hours = parseInt(btn.getAttribute('data-hours'), 10);
+                    if (isNaN(hours)) return;
+
+                    selectedHours = hours;
+
+                    // Update active state on both groups
+                    groups.forEach(function(g) {
+                        var buttons = g.querySelectorAll('.time-range-btn');
+                        buttons.forEach(function(b) {
+                            b.classList.toggle('active',
+                                parseInt(b.getAttribute('data-hours'), 10) === hours);
+                        });
+                    });
+
+                    // Re-fetch history for new range
+                    fetchHistory();
+                });
+            });
         }
 
         // ============================================================
@@ -770,6 +1050,9 @@
                                 if (!label) return '';
                                 var parts = label.split('T');
                                 if (parts.length < 2) return label;
+                                if (selectedHours > 48) {
+                                    return parts[0].substring(5) + ' ' + parts[1].substring(0, 5);
+                                }
                                 return parts[1].substring(0, 5);
                             }
                         }
@@ -870,13 +1153,43 @@
             return parts[1].substring(0, 8);
         }
 
-        function formatDateTime(isoStr) {
-            if (!isoStr) return '--';
-            return isoStr.replace('T', ' ');
-        }
-
         function timeAgo() {
             return 'Updated just now';
+        }
+
+        // ============================================================
+        // Alert handling
+        // ============================================================
+        function updateAlerts(data) {
+            // Reset alert states
+            dom.tempCard.classList.remove('alert-warn', 'alert-critical');
+            dom.humidityCard.classList.remove('alert-warn', 'alert-critical');
+            dom.tempAlertBadge.className = 'alert-badge';
+            dom.tempAlertBadge.textContent = '';
+            dom.humidityAlertBadge.className = 'alert-badge';
+            dom.humidityAlertBadge.textContent = '';
+
+            if (!data.alerts || !data.alerts.length) return;
+
+            data.alerts.forEach(function(alert) {
+                if (alert.sensor === 'temperature') {
+                    dom.tempCard.classList.add(
+                        alert.level === 'critical' ? 'alert-critical' : 'alert-warn'
+                    );
+                    dom.tempAlertBadge.className = 'alert-badge ' +
+                        (alert.level === 'critical' ? 'critical' : 'warn');
+                    dom.tempAlertBadge.textContent =
+                        alert.level === 'critical' ? 'HIGH' : 'LOW';
+                } else if (alert.sensor === 'humidity') {
+                    dom.humidityCard.classList.add(
+                        alert.level === 'critical' ? 'alert-critical' : 'alert-warn'
+                    );
+                    dom.humidityAlertBadge.className = 'alert-badge ' +
+                        (alert.level === 'critical' ? 'critical' : 'warn');
+                    dom.humidityAlertBadge.textContent =
+                        alert.level === 'critical' ? 'HIGH' : 'LOW';
+                }
+            });
         }
 
         // ============================================================
@@ -900,6 +1213,9 @@
             dom.lightValue.textContent = data.light ? 'ON' : 'OFF';
             dom.lightUpdated.textContent = now;
 
+            // Alerts
+            updateAlerts(data);
+
             // System info
             dom.infoUptime.textContent = data.uptime || '--';
             dom.infoLastUpdate.textContent = formatTime(data.timestamp);
@@ -907,6 +1223,12 @@
             dom.infoLightSchedule.textContent =
                 (data.light_on || '--').substring(0, 5) + ' – ' +
                 (data.light_off || '--').substring(0, 5);
+
+            if (data.thresholds) {
+                dom.infoThresholds.textContent =
+                    data.thresholds.temp_min + '-' + data.thresholds.temp_max + '°C, ' +
+                    data.thresholds.humidity_min + '-' + data.thresholds.humidity_max + '%';
+            }
 
             if (data.fan) {
                 dom.infoFan.innerHTML = '<span class="fan-on">Running</span>';
@@ -934,7 +1256,6 @@
             if (!chartJsLoaded || !tempChartInstance || !humidityChartInstance) return;
             if (!histData || !histData.timestamps) return;
 
-            // Thin out labels for display - show every Nth
             var labels = histData.timestamps;
             var tempData = histData.temperature;
             var humData = histData.humidity;
@@ -946,6 +1267,62 @@
             humidityChartInstance.data.labels = labels;
             humidityChartInstance.data.datasets[0].data = humData;
             humidityChartInstance.update('none');
+        }
+
+        // ============================================================
+        // Update advisor panel
+        // ============================================================
+        function updateAdvisor(data) {
+            if (!data || !data.advice) return;
+
+            var items = data.advice;
+            var html = '';
+
+            if (items.length === 0) {
+                html = '<div class="advisor-empty">No data available for analysis yet.</div>';
+            } else {
+                items.forEach(function(item) {
+                    var severityClass = 'severity-' + (item.severity || 'ok');
+                    html += '<div class="advisor-item ' + severityClass + '">';
+                    html += '<div class="advisor-severity-dot"></div>';
+                    html += '<div class="advisor-content">';
+                    html += '<div class="advisor-title">' + escapeHtml(item.title) + '</div>';
+                    html += '<div class="advisor-message">' + escapeHtml(item.message) + '</div>';
+                    if (item.metric) {
+                        html += '<span class="advisor-metric">' + escapeHtml(item.metric) + '</span>';
+                    }
+                    html += '</div></div>';
+                });
+            }
+
+            dom.advisorGrid.innerHTML = html;
+
+            var count = items.length;
+            var hasCritical = items.some(function(i) { return i.severity === 'critical'; });
+            var hasWarning = items.some(function(i) { return i.severity === 'warning'; });
+            if (hasCritical) {
+                dom.advisorBadge.textContent = count + ' alert' + (count > 1 ? 's' : '');
+                dom.advisorBadge.style.background = 'rgba(231, 111, 81, 0.15)';
+                dom.advisorBadge.style.color = '#c0392b';
+            } else if (hasWarning) {
+                dom.advisorBadge.textContent = count + ' warning' + (count > 1 ? 's' : '');
+                dom.advisorBadge.style.background = 'rgba(233, 196, 106, 0.2)';
+                dom.advisorBadge.style.color = '#95700a';
+            } else {
+                dom.advisorBadge.textContent = 'All clear';
+                dom.advisorBadge.style.background = '';
+                dom.advisorBadge.style.color = '';
+            }
+
+            if (data.analyzed_at) {
+                dom.advisorTimestamp.textContent = 'Analyzed at ' + formatTime(data.analyzed_at);
+            }
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
         // ============================================================
@@ -978,6 +1355,22 @@
             xhr.send();
         }
 
+        function fetchHistory() {
+            fetchJSON('/api/history?hours=' + selectedHours, function(err, histData) {
+                if (!err && histData) {
+                    updateCharts(histData);
+                }
+            });
+        }
+
+        function fetchAdvisor() {
+            fetchJSON('/api/advisor', function(err, data) {
+                if (!err && data) {
+                    updateAdvisor(data);
+                }
+            });
+        }
+
         function pollData() {
             setStatus('connecting', 'Updating...');
 
@@ -994,16 +1387,13 @@
                 setStatus('online', 'Connected');
                 updateStatus(statusData);
 
-                fetchJSON('/api/history?hours=24', function(histErr, histData) {
-                    if (!histErr && histData) {
-                        updateCharts(histData);
-                    }
+                fetchHistory();
+                fetchAdvisor();
 
-                    if (isFirstLoad) {
-                        dom.loadingOverlay.classList.add('hidden');
-                        isFirstLoad = false;
-                    }
-                });
+                if (isFirstLoad) {
+                    dom.loadingOverlay.classList.add('hidden');
+                    isFirstLoad = false;
+                }
             });
         }
 
@@ -1011,20 +1401,13 @@
         // Initialization
         // ============================================================
         function init() {
-            // Check if Chart.js loaded successfully
             chartJsLoaded = typeof Chart !== 'undefined';
-
-            // Initialize charts (or fall back to SVG)
             initCharts();
-
-            // First data fetch
+            setupTimeRangeButtons();
             pollData();
-
-            // Poll every 30 seconds
             pollTimer = setInterval(pollData, 30000);
         }
 
-        // Start when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {

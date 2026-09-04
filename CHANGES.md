@@ -286,3 +286,61 @@ and `MVP_DIR` environment variable for path resolution.
 
 **Usage**: `python3 MVP/python/app.py` from project root (or `python3 app.py`
 from `MVP/python/`). Dashboard accessible at `http://localhost:8000/`.
+
+---
+
+## Phase 3: Alert Thresholds, SQLite History & Grow Advisor
+
+### 12. Alert Thresholds
+
+**`MVP/python/app.py`** - Configurable alert system for sensor readings:
+- Environment variables: `MVP_TEMP_MIN` (default 18), `MVP_TEMP_MAX` (30),
+  `MVP_HUM_MIN` (30), `MVP_HUM_MAX` (80)
+- `_check_alerts()` returns alert objects with sensor, level (warning/critical),
+  and human-readable message
+- `/api/status` response now includes `alerts` array and `thresholds` dict
+
+**`MVP/web/index.html`** - Visual alert feedback:
+- Stat cards pulse amber (warning) or red (critical) when readings are out of range
+- Alert badges (HIGH/LOW) appear on affected stat cards
+- CSS animations: `alert-pulse-warn` (2s cycle) and `alert-pulse-critical` (1.5s)
+- System info panel shows configured alert thresholds
+
+### 13. Multi-Day History with SQLite
+
+**`MVP/python/app.py`** - Persistent data storage replacing in-memory deques:
+- SQLite database at `MVP/data/readings.db` (configurable via `MVP_DB`)
+- `_init_db()` creates `readings` table with timestamp index
+- `_store_reading()` persists each minute's data with thread-safe locking
+- `_query_history()` and `_query_recent()` support ranges up to 90 days
+- Automatic downsampling to 2000 points for large ranges
+- `_prune_old_data()` removes readings older than 90 days on shutdown
+- `_backfill_history()` only runs when database is empty (preserves real data)
+
+**`MVP/web/index.html`** - Time-range selector UI:
+- Five range buttons (1h, 6h, 24h, 7d, 30d) replace static "Last 24 hours" badge
+- Both chart cards share synchronized range selection
+- Chart x-axis labels adapt: time-only for ranges <= 48h, date+time for longer
+- History re-fetches immediately on range change
+
+### 14. AI Grow Advisor (Rule-Based)
+
+**`MVP/python/app.py`** - Trend analysis engine:
+- `_get_advice()` analyzes 6 hours of sensor history
+- Six rules: mold risk (high humidity sustained), low humidity stress,
+  heat stress, cold stress, large temperature swings, condensation risk
+- Each recommendation includes severity (ok/warning/critical), title,
+  descriptive message, and metric summary
+- Returns "Conditions Look Good" when all readings are healthy
+- New endpoint: `GET /api/advisor` returning `{advice: [...], analyzed_at: "..."}`
+
+**`MVP/web/index.html`** - Grow Advisor panel:
+- Card with severity-colored left borders and animated dots
+- Each recommendation shows title, description, and metric badge
+- Header badge summarizes: "All clear", "N warnings", or "N alerts"
+- Refreshes with each 30-second poll cycle
+
+### Dashboard Version Bump
+
+Dashboard and server version updated from v2.0 to v3.0 to reflect the three
+new features.
