@@ -205,7 +205,142 @@ Changed misleading module comment from "Temperature chart" to "Humidity chart".
   the current `env.py` configuration - this feature appears broken
 - The web CGI scripts in `MVP/web/cgi-bin/` have not been reviewed
 - Consider adding integration tests that run against a CouchDB Docker container
-- The `Server_8000.py` web server creates a TCP server at module level - could
-  benefit from the same lazy-initialization pattern applied to CouchUtil
 - Consider migrating from CouchDB to a lighter database (SQLite) for simpler
   deployment
+
+---
+
+## Phase 2: Modern Dashboard & Working Server
+
+### 10. Modern Web Dashboard (replaced file)
+
+**`MVP/web/index.html`** - Complete rewrite from 134-line bare-bones tabbed page
+to 830-line modern responsive dashboard.
+
+**Layout** (CSS Grid/Flexbox):
+- Gradient header with project name and live connection status indicator
+  (green dot = online, yellow = connecting, red = disconnected)
+- 4 stat cards: Temperature, Humidity, Dew Point, Light Status - each with
+  colored left-border accent, large value display, and update timestamp
+- Two Chart.js interactive line charts (Temperature + Humidity over 24h) with
+  smooth curves, area fill, and tooltips
+- Camera feed panel with overlay timestamp
+- System Info panel showing uptime, fan state, light schedule, last update,
+  and links to Wiki/Forum/GitHub
+- Footer with version info
+
+**Styling**:
+- Nature/agriculture color scheme via CSS custom properties (greens, earth tones,
+  orange for temp, blue for humidity)
+- Card-based design with subtle shadows (`box-shadow`) and rounded corners (12px)
+- Responsive: 3 breakpoints (4-col / 2-col / 1-col stat cards, side-by-side /
+  stacked charts)
+- System font stack only - no external font loads
+- Loading overlay with spinner on startup
+
+**Interactivity** (vanilla JS, no frameworks):
+- Fetches `/api/status` and `/api/history?hours=24` every 30 seconds
+- Updates stat card values and Chart.js datasets dynamically
+- Camera image auto-refreshes with cache-busting query string
+- Graceful degradation: if Chart.js CDN fails, falls back to existing pygal SVG
+  charts; if API unreachable, shows "Disconnected" state (not a broken page)
+
+**Only external dependency**: Chart.js from CDN (loaded via `<script>` tag)
+
+### 11. REST API Server with Demo Mode (new file)
+
+**`MVP/python/app.py`** - New web server replacing `Server_8000.py` (which is
+kept as fallback).
+
+**Architecture** (Python stdlib only - no Flask/Django):
+- Extends `http.server.SimpleHTTPRequestHandler` with API routing
+- Serves static files from `MVP/web/` with proper MIME types
+- JSON API endpoints at `/api/status` and `/api/history`
+- CORS headers for development flexibility
+- Proper error responses (JSON 404 for unknown API endpoints)
+
+**API endpoints**:
+- `GET /api/status` - Current temperature, humidity, dew point, light/fan state,
+  uptime, timestamp, and demo_mode flag
+- `GET /api/history?hours=N` - Time series arrays (timestamps, temperature,
+  humidity) for chart rendering (1-24 hours, 1 reading per minute)
+
+**Demo mode** (automatic when not on Pi):
+- Detects hardware via `/dev/i2c-1` existence or `MVP_DEMO=1` env var
+- Generates realistic simulated data:
+  - Temperature: 24h sinusoidal cycle centered on 24C with +/- 3C swing and
+    random noise (peak at 14:00, coolest at 02:00)
+  - Humidity: inversely correlated with temperature, centered around 60%
+  - Light: follows env.py schedule (06:30 on, 22:00 off)
+  - Fan: follows thermostat logic (on when temp > target)
+- Pre-fills 24 hours of history (1440 entries) on startup
+- Adds one new reading per minute while running
+
+**Production mode** (on Pi with hardware):
+- Imports `SI7021` for real sensor readings
+- Imports `Relay` for actual light/fan GPIO state
+- Falls back gracefully to demo mode if hardware imports fail
+
+**Integration**: Uses `env.py` config, `DewPoint.getDewPoint`, `LogUtil.get_logger`,
+and `MVP_DIR` environment variable for path resolution.
+
+**Usage**: `python3 MVP/python/app.py` from project root (or `python3 app.py`
+from `MVP/python/`). Dashboard accessible at `http://localhost:8000/`.
+
+---
+
+## Phase 3: Alert Thresholds, SQLite History & Grow Advisor
+
+### 12. Alert Thresholds
+
+**`MVP/python/app.py`** - Configurable alert system for sensor readings:
+- Environment variables: `MVP_TEMP_MIN` (default 18), `MVP_TEMP_MAX` (30),
+  `MVP_HUM_MIN` (30), `MVP_HUM_MAX` (80)
+- `_check_alerts()` returns alert objects with sensor, level (warning/critical),
+  and human-readable message
+- `/api/status` response now includes `alerts` array and `thresholds` dict
+
+**`MVP/web/index.html`** - Visual alert feedback:
+- Stat cards pulse amber (warning) or red (critical) when readings are out of range
+- Alert badges (HIGH/LOW) appear on affected stat cards
+- CSS animations: `alert-pulse-warn` (2s cycle) and `alert-pulse-critical` (1.5s)
+- System info panel shows configured alert thresholds
+
+### 13. Multi-Day History with SQLite
+
+**`MVP/python/app.py`** - Persistent data storage replacing in-memory deques:
+- SQLite database at `MVP/data/readings.db` (configurable via `MVP_DB`)
+- `_init_db()` creates `readings` table with timestamp index
+- `_store_reading()` persists each minute's data with thread-safe locking
+- `_query_history()` and `_query_recent()` support ranges up to 90 days
+- Automatic downsampling to 2000 points for large ranges
+- `_prune_old_data()` removes readings older than 90 days on shutdown
+- `_backfill_history()` only runs when database is empty (preserves real data)
+
+**`MVP/web/index.html`** - Time-range selector UI:
+- Five range buttons (1h, 6h, 24h, 7d, 30d) replace static "Last 24 hours" badge
+- Both chart cards share synchronized range selection
+- Chart x-axis labels adapt: time-only for ranges <= 48h, date+time for longer
+- History re-fetches immediately on range change
+
+### 14. AI Grow Advisor (Rule-Based)
+
+**`MVP/python/app.py`** - Trend analysis engine:
+- `_get_advice()` analyzes 6 hours of sensor history
+- Six rules: mold risk (high humidity sustained), low humidity stress,
+  heat stress, cold stress, large temperature swings, condensation risk
+- Each recommendation includes severity (ok/warning/critical), title,
+  descriptive message, and metric summary
+- Returns "Conditions Look Good" when all readings are healthy
+- New endpoint: `GET /api/advisor` returning `{advice: [...], analyzed_at: "..."}`
+
+**`MVP/web/index.html`** - Grow Advisor panel:
+- Card with severity-colored left borders and animated dots
+- Each recommendation shows title, description, and metric badge
+- Header badge summarizes: "All clear", "N warnings", or "N alerts"
+- Refreshes with each 30-second poll cycle
+
+### Dashboard Version Bump
+
+Dashboard and server version updated from v2.0 to v3.0 to reflect the three
+new features.
