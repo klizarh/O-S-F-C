@@ -1,133 +1,1420 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<style>
-body {font-family: "Lato", sans-serif;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Food Computer Dashboard</title>
+    <style>
+        /* ============================================================
+           CSS Custom Properties - Nature/Agriculture Theme
+           ============================================================ */
+        :root {
+            /* Primary greens */
+            --color-primary: #1a7a6d;
+            --color-primary-light: #2ba89a;
+            --color-primary-dark: #0f4f46;
 
-/* Style the tab */
-div.tab {
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #f1f1f1;
-}
+            /* Earth tones */
+            --color-earth: #606c38;
+            --color-earth-light: #808a50;
 
-/* Style the buttons inside the tab */
-div.tab button {
-    background-color: inherit;
-    float: left;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 14px 16px;
-    transition: 0.3s;
-    font-size: 17px;
-}
+            /* Accent colors for data */
+            --color-temp: #e76f51;
+            --color-temp-light: rgba(231, 111, 81, 0.15);
+            --color-humidity: #457b9d;
+            --color-humidity-light: rgba(69, 123, 157, 0.15);
+            --color-dewpoint: #2a9d8f;
+            --color-dewpoint-light: rgba(42, 157, 143, 0.15);
+            --color-light: #e9c46a;
+            --color-light-dark: #c49b2a;
 
-/* Change background color of buttons on hover */
-div.tab button:hover {
-    background-color: #ddd;
-}
+            /* UI colors */
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #212529;
+            --color-text-muted: #6c757d;
+            --color-border: #dee2e6;
+            --color-shadow: rgba(0, 0, 0, 0.08);
 
-/* Create an active/current tablink class */
-div.tab button.active {
-    background-color: #ccc;
-}
+            /* Status */
+            --color-online: #2d6a4f;
+            --color-connecting: #e9c46a;
+            --color-offline: #e76f51;
 
-/* Style the tab content */
-.tabcontent {
-    display: none;
-    padding: 6px 12px;
-    border: 1px solid #ccc;
-    border-top: none;
-}
-</style>
-<head>
- <title>MVP Dashboard v 1.3</title>
- <meta http-equiv="refresh" content="3600">
+            /* Alert colors */
+            --color-alert-warn: #e9c46a;
+            --color-alert-warn-bg: rgba(233, 196, 106, 0.12);
+            --color-alert-critical: #e76f51;
+            --color-alert-critical-bg: rgba(231, 111, 81, 0.12);
+
+            /* Advisor severity */
+            --color-severity-ok: #2d6a4f;
+            --color-severity-warning: #e9c46a;
+            --color-severity-critical: #e76f51;
+
+            /* Layout */
+            --radius: 12px;
+            --shadow: 0 2px 8px var(--color-shadow);
+            --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --transition: 0.2s ease;
+            --max-width: 1400px;
+        }
+
+        /* ============================================================
+           Reset & Base
+           ============================================================ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         "Helvetica Neue", Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ============================================================
+           Loading Overlay
+           ============================================================ */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.4s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           Header
+           ============================================================ */
+        .header {
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light));
+            color: #fff;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .header-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--color-online);
+            transition: background var(--transition);
+        }
+
+        .status-dot.connecting {
+            background: var(--color-connecting);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--color-offline);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ============================================================
+           Main Content
+           ============================================================ */
+        .main {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ============================================================
+           Stat Cards Grid
+           ============================================================ */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            border-left: 4px solid var(--color-border);
+            transition: box-shadow var(--transition), transform var(--transition),
+                        background var(--transition), border-color var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-1px);
+        }
+
+        .stat-card.temp { border-left-color: var(--color-temp); }
+        .stat-card.humidity { border-left-color: var(--color-humidity); }
+        .stat-card.dewpoint { border-left-color: var(--color-dewpoint); }
+        .stat-card.light { border-left-color: var(--color-light); }
+
+        /* Alert states on stat cards */
+        .stat-card.alert-warn {
+            border-left-color: var(--color-alert-warn);
+            background: var(--color-alert-warn-bg);
+            animation: alert-pulse-warn 2s ease-in-out infinite;
+        }
+
+        .stat-card.alert-critical {
+            border-left-color: var(--color-alert-critical);
+            background: var(--color-alert-critical-bg);
+            animation: alert-pulse-critical 1.5s ease-in-out infinite;
+        }
+
+        @keyframes alert-pulse-warn {
+            0%, 100% { box-shadow: var(--shadow); }
+            50% { box-shadow: 0 0 12px rgba(233, 196, 106, 0.5); }
+        }
+
+        @keyframes alert-pulse-critical {
+            0%, 100% { box-shadow: var(--shadow); }
+            50% { box-shadow: 0 0 16px rgba(231, 111, 81, 0.5); }
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .alert-badge.warn {
+            display: inline-block;
+            background: var(--color-alert-warn);
+            color: #5a4a00;
+        }
+
+        .alert-badge.critical {
+            display: inline-block;
+            background: var(--color-alert-critical);
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .stat-card.temp .stat-value { color: var(--color-temp); }
+        .stat-card.humidity .stat-value { color: var(--color-humidity); }
+        .stat-card.dewpoint .stat-value { color: var(--color-dewpoint); }
+        .stat-card.light .stat-value { color: var(--color-light-dark); }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        .stat-updated {
+            font-size: 0.72rem;
+            color: var(--color-text-muted);
+            margin-top: 4px;
+        }
+
+        /* ============================================================
+           Chart Cards
+           ============================================================ */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .card-badge {
+            font-size: 0.72rem;
+            background: var(--color-bg);
+            padding: 3px 10px;
+            border-radius: 12px;
+            color: var(--color-text-muted);
+        }
+
+        .card-body {
+            padding: 16px 20px 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .chart-fallback {
+            display: none;
+            width: 100%;
+            height: 280px;
+        }
+
+        .chart-fallback object {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-fallback.active {
+            display: block;
+        }
+
+        .chart-container.hidden {
+            display: none;
+        }
+
+        /* ============================================================
+           Time Range Selector
+           ============================================================ */
+        .time-range-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .time-range-btn {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            background: var(--color-bg);
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
+            line-height: 1.4;
+        }
+
+        .time-range-btn:hover {
+            border-color: var(--color-primary-light);
+            color: var(--color-primary);
+        }
+
+        .time-range-btn.active {
+            background: var(--color-primary);
+            color: #fff;
+            border-color: var(--color-primary);
+        }
+
+        /* ============================================================
+           Grow Advisor Panel
+           ============================================================ */
+        .advisor-section {
+            margin-bottom: 24px;
+        }
+
+        .advisor-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .advisor-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--color-surface);
+            border-radius: 8px;
+            border-left: 4px solid var(--color-border);
+            align-items: flex-start;
+        }
+
+        .advisor-item.severity-ok {
+            border-left-color: var(--color-severity-ok);
+        }
+
+        .advisor-item.severity-warning {
+            border-left-color: var(--color-severity-warning);
+        }
+
+        .advisor-item.severity-critical {
+            border-left-color: var(--color-severity-critical);
+        }
+
+        .advisor-severity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .severity-ok .advisor-severity-dot {
+            background: var(--color-severity-ok);
+        }
+
+        .severity-warning .advisor-severity-dot {
+            background: var(--color-severity-warning);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .severity-critical .advisor-severity-dot {
+            background: var(--color-severity-critical);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        .advisor-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .advisor-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .advisor-message {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        .advisor-metric {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: var(--color-bg);
+            color: var(--color-text-muted);
+        }
+
+        .advisor-empty {
+            text-align: center;
+            padding: 24px;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
+        .advisor-timestamp {
+            font-size: 0.72rem;
+            color: var(--color-text-muted);
+            padding: 8px 20px 12px;
+            text-align: right;
+        }
+
+        /* ============================================================
+           Bottom Grid: Camera + System Info
+           ============================================================ */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* Camera panel */
+        .camera-container {
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-container img {
+            max-width: 100%;
+            max-height: 480px;
+            object-fit: contain;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 14px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            color: #fff;
+            font-size: 0.78rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .camera-no-feed {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* System info panel */
+        .info-list {
+            list-style: none;
+        }
+
+        .info-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.9rem;
+        }
+
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--color-text-muted);
+        }
+
+        .info-value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .info-value a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .info-value a:hover {
+            text-decoration: underline;
+        }
+
+        .fan-on { color: var(--color-primary); }
+        .fan-off { color: var(--color-text-muted); }
+
+        /* ============================================================
+           Footer
+           ============================================================ */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--color-text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--color-border);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ============================================================
+           Responsive Breakpoints
+           ============================================================ */
+
+        /* Tablet: 2 columns */
+        @media (max-width: 1024px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Mobile: 1 column */
+        @media (max-width: 600px) {
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1.6rem;
+            }
+
+            .chart-container {
+                height: 220px;
+            }
+
+            .time-range-group {
+                flex-wrap: wrap;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* ============================================================
+           Demo mode badge
+           ============================================================ */
+        .demo-badge {
+            display: none;
+            font-size: 0.72rem;
+            background: rgba(233, 196, 106, 0.3);
+            color: #95700a;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .demo-badge.visible {
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
 
-<h1>MVP Dashboard v 1.3</h1>
-<p>Click on a tab to display</p>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Connecting to Food Computer...</div>
+    </div>
 
-<div class="tab">
-  <button class="tablinks" onclick="openTab(event, 'Temperature')">Temperature</button>
-  <button class="tablinks" onclick="openTab(event, 'Humidity')">Humidity</button>
-  <button class="tablinks" onclick="openTab(event, 'Camera')">Camera</button>
-  <button class="tablinks" onclick="openTab(event, 'About')">About</button>
-</div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">
+            <div>
+                <h1>MVP Food Computer</h1>
+                <div class="header-subtitle">Open Source Controlled Environment Agriculture</div>
+            </div>
+            <span class="demo-badge" id="demoBadge">DEMO</span>
+        </div>
+        <div class="connection-status">
+            <div class="status-dot connecting" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </header>
 
-<div id="Temperature" class="tabcontent">
-  <h3>Temperature</h3>
-    <object id="tempChartImage" type="image/svg+xml" data="temp_chart.svg">
-	"Your browser does not support SVG
-    </object>
-</div>
+    <!-- Main Content -->
+    <main class="main">
 
-<div id="Humidity" class="tabcontent">
-  <h3>Humidity</h3>
-    <object id="humidityChartImage" type="image/svg+xml" data="humidity_chart.svg"/>
-	"Your browser does not support SVG
-    </object>
-</div>
+        <!-- Stat Cards -->
+        <section class="stat-grid">
+            <div class="stat-card temp" id="tempCard">
+                <span class="alert-badge" id="tempAlertBadge"></span>
+                <div class="stat-label">Temperature</div>
+                <div class="stat-value" id="tempValue">--<span class="stat-unit"> &deg;C</span></div>
+                <div class="stat-updated" id="tempUpdated">Waiting for data...</div>
+            </div>
 
-<div id="Camera" class="tabcontent">
-  <h3>Camera</h3>
-  <p>Latest picture goes here.</p>
-  <p>
-  <img id="latestCameraImage" src="image.jpg" alt="Latest MVP image" style="width:640px;height:480px;">
-  </p>
-</div>
+            <div class="stat-card humidity" id="humidityCard">
+                <span class="alert-badge" id="humidityAlertBadge"></span>
+                <div class="stat-label">Humidity</div>
+                <div class="stat-value" id="humidityValue">--<span class="stat-unit"> %</span></div>
+                <div class="stat-updated" id="humidityUpdated">Waiting for data...</div>
+            </div>
 
-<div id="About" class="tabcontent">
-  <h3>About</h3>
-  <h4 style="color:green">Built by Sammie Arnet and Doug Anderson November 2020</h4>
-  <p>Current Version: 1.3</p>
-  <p>The MVP (Minimal Viable Product) is a low cost, hydroponic growth chamber; designed as a simplified version of the <a target="_blank" href="https://www.media.mit.edu/groups/open-agriculture-openag/overview">MIT OpenAg Personal Food Computer</a>.  While this is a working hydroponic environment, the focus in on collecting research data.  This is an open source project based around a Raspberry Pi 'brain' and Python code, with a CouchDB repository.</p>
-  <p>Documentation is on the <a target="_blank" href="https://github.com/futureag/blog/wiki">FutureAg Wiki</a></p>
-  <p>Discussion is on the <a target="_blank" href="http://forum.openag.media.mit.edu">MIT OpenAg Forum</a></p>
-  <p>Code is sourced on <a target="_blank" href="https://github.com/futureag">Github</a></p>
-  <p>Special thanks to Phil Speth and the students involved with Greenhouse Venture for testing out this new release.</p>
+            <div class="stat-card dewpoint">
+                <div class="stat-label">Dew Point</div>
+                <div class="stat-value" id="dewpointValue">--<span class="stat-unit"> &deg;C</span></div>
+                <div class="stat-updated" id="dewpointUpdated">Waiting for data...</div>
+            </div>
 
+            <div class="stat-card light">
+                <div class="stat-label">Light Status</div>
+                <div class="stat-value" id="lightValue">--</div>
+                <div class="stat-updated" id="lightUpdated">Waiting for data...</div>
+            </div>
+        </section>
 
-</div>
+        <!-- Charts -->
+        <section class="chart-grid">
+            <!-- Temperature Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Temperature</div>
+                    <div class="time-range-group" id="tempTimeRange">
+                        <button class="time-range-btn" data-hours="1">1h</button>
+                        <button class="time-range-btn" data-hours="6">6h</button>
+                        <button class="time-range-btn active" data-hours="24">24h</button>
+                        <button class="time-range-btn" data-hours="168">7d</button>
+                        <button class="time-range-btn" data-hours="720">30d</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" id="tempChartContainer">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                    <div class="chart-fallback" id="tempFallback">
+                        <object type="image/svg+xml" data="temp_chart.svg">
+                            Temperature chart unavailable
+                        </object>
+                    </div>
+                </div>
+            </div>
 
-<script>
-function getRandomNumber(min, max) {
-    return Math.floor(Math.random() * (max - min) + min);
-}
+            <!-- Humidity Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Humidity</div>
+                    <div class="time-range-group" id="humidityTimeRange">
+                        <button class="time-range-btn" data-hours="1">1h</button>
+                        <button class="time-range-btn" data-hours="6">6h</button>
+                        <button class="time-range-btn active" data-hours="24">24h</button>
+                        <button class="time-range-btn" data-hours="168">7d</button>
+                        <button class="time-range-btn" data-hours="720">30d</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" id="humidityChartContainer">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                    <div class="chart-fallback" id="humidityFallback">
+                        <object type="image/svg+xml" data="humidity_chart.svg">
+                            Humidity chart unavailable
+                        </object>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-function updateImages() {
-    var randomNumber = getRandomNumber(1000000000, 9999999999);
+        <!-- Grow Advisor -->
+        <section class="advisor-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Grow Advisor</div>
+                    <div class="card-badge" id="advisorBadge">Analyzing...</div>
+                </div>
+                <div class="card-body" style="padding: 12px 20px 4px;">
+                    <div class="advisor-grid" id="advisorGrid">
+                        <div class="advisor-empty">Loading recommendations...</div>
+                    </div>
+                </div>
+                <div class="advisor-timestamp" id="advisorTimestamp"></div>
+            </div>
+        </section>
 
-    // ask for the images with a random query string so the browser doesn't use a cached image.
-    document.getElementById("tempChartImage")
-	    .setAttribute('data', 'temp_chart.svg?' + randomNumber);
+        <!-- Camera + System Info -->
+        <section class="bottom-grid">
+            <!-- Camera Feed -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Camera Feed</div>
+                    <div class="card-badge" id="cameraTimestamp">--</div>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="camera-container">
+                        <img id="cameraImage" src="image.jpg" alt="Food Computer camera feed"
+                             onerror="this.style.display='none'; document.getElementById('cameraNoFeed').style.display='block';">
+                        <div class="camera-no-feed" id="cameraNoFeed" style="display: none;">
+                            No camera feed available
+                        </div>
+                        <div class="camera-overlay">
+                            <span>Live Feed</span>
+                            <span id="cameraOverlayTime">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    document.getElementById("humidityChartImage")
-	    .setAttribute('data', 'humidity_chart.svg?' + randomNumber);
+            <!-- System Info -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">System Information</div>
+                </div>
+                <div class="card-body">
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-label">Uptime</span>
+                            <span class="info-value" id="infoUptime">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Fan State</span>
+                            <span class="info-value" id="infoFan">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Light Schedule</span>
+                            <span class="info-value" id="infoLightSchedule">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Target Temperature</span>
+                            <span class="info-value" id="infoTargetTemp">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Alert Thresholds</span>
+                            <span class="info-value" id="infoThresholds">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Last Update</span>
+                            <span class="info-value" id="infoLastUpdate">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Mode</span>
+                            <span class="info-value" id="infoMode">--</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Documentation</span>
+                            <span class="info-value">
+                                <a href="https://github.com/futureag/blog/wiki" target="_blank" rel="noopener">Wiki</a>
+                            </span>
+                        </li>
+                        <li>
+                            <span class="info-label">Community</span>
+                            <span class="info-value">
+                                <a href="http://forum.openag.media.mit.edu" target="_blank" rel="noopener">Forum</a>
+                            </span>
+                        </li>
+                        <li>
+                            <span class="info-label">Source Code</span>
+                            <span class="info-value">
+                                <a href="https://github.com/futureag" target="_blank" rel="noopener">GitHub</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
 
-    document.getElementById("latestCameraImage")
-	    .setAttribute('data', 'image.jpg?' + randomNumber);
-}
+    <!-- Footer -->
+    <footer class="footer">
+        MVP Food Computer Dashboard v3.0 &mdash;
+        Open Source Controlled Environment Agriculture &mdash;
+        <a href="https://github.com/futureag" target="_blank" rel="noopener">FutureAg</a>
+    </footer>
 
-function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
+    <!-- Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
-    updateImages();
+    <script>
+    (function() {
+        'use strict';
 
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-}
-</script>
-     
+        // ============================================================
+        // State
+        // ============================================================
+        var chartJsLoaded = typeof Chart !== 'undefined';
+        var tempChartInstance = null;
+        var humidityChartInstance = null;
+        var pollTimer = null;
+        var isFirstLoad = true;
+        var selectedHours = 24;
+
+        // ============================================================
+        // DOM references
+        // ============================================================
+        var dom = {
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            statusDot: document.getElementById('statusDot'),
+            statusText: document.getElementById('statusText'),
+            demoBadge: document.getElementById('demoBadge'),
+
+            tempCard: document.getElementById('tempCard'),
+            humidityCard: document.getElementById('humidityCard'),
+            tempAlertBadge: document.getElementById('tempAlertBadge'),
+            humidityAlertBadge: document.getElementById('humidityAlertBadge'),
+
+            tempValue: document.getElementById('tempValue'),
+            humidityValue: document.getElementById('humidityValue'),
+            dewpointValue: document.getElementById('dewpointValue'),
+            lightValue: document.getElementById('lightValue'),
+
+            tempUpdated: document.getElementById('tempUpdated'),
+            humidityUpdated: document.getElementById('humidityUpdated'),
+            dewpointUpdated: document.getElementById('dewpointUpdated'),
+            lightUpdated: document.getElementById('lightUpdated'),
+
+            tempChartContainer: document.getElementById('tempChartContainer'),
+            humidityChartContainer: document.getElementById('humidityChartContainer'),
+            tempFallback: document.getElementById('tempFallback'),
+            humidityFallback: document.getElementById('humidityFallback'),
+
+            tempTimeRange: document.getElementById('tempTimeRange'),
+            humidityTimeRange: document.getElementById('humidityTimeRange'),
+
+            advisorGrid: document.getElementById('advisorGrid'),
+            advisorBadge: document.getElementById('advisorBadge'),
+            advisorTimestamp: document.getElementById('advisorTimestamp'),
+
+            cameraImage: document.getElementById('cameraImage'),
+            cameraTimestamp: document.getElementById('cameraTimestamp'),
+            cameraOverlayTime: document.getElementById('cameraOverlayTime'),
+
+            infoUptime: document.getElementById('infoUptime'),
+            infoFan: document.getElementById('infoFan'),
+            infoLightSchedule: document.getElementById('infoLightSchedule'),
+            infoTargetTemp: document.getElementById('infoTargetTemp'),
+            infoThresholds: document.getElementById('infoThresholds'),
+            infoLastUpdate: document.getElementById('infoLastUpdate'),
+            infoMode: document.getElementById('infoMode')
+        };
+
+        // ============================================================
+        // Connection status
+        // ============================================================
+        function setStatus(state, text) {
+            dom.statusDot.className = 'status-dot';
+            if (state === 'online') {
+                dom.statusDot.classList.remove('connecting', 'offline');
+            } else if (state === 'connecting') {
+                dom.statusDot.classList.add('connecting');
+            } else {
+                dom.statusDot.classList.add('offline');
+            }
+            dom.statusText.textContent = text || state;
+        }
+
+        // ============================================================
+        // Time range selector
+        // ============================================================
+        function setupTimeRangeButtons() {
+            var groups = [dom.tempTimeRange, dom.humidityTimeRange];
+            groups.forEach(function(group) {
+                if (!group) return;
+                group.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.time-range-btn');
+                    if (!btn) return;
+                    var hours = parseInt(btn.getAttribute('data-hours'), 10);
+                    if (isNaN(hours)) return;
+
+                    selectedHours = hours;
+
+                    // Update active state on both groups
+                    groups.forEach(function(g) {
+                        var buttons = g.querySelectorAll('.time-range-btn');
+                        buttons.forEach(function(b) {
+                            b.classList.toggle('active',
+                                parseInt(b.getAttribute('data-hours'), 10) === hours);
+                        });
+                    });
+
+                    // Re-fetch history for new range
+                    fetchHistory();
+                });
+            });
+        }
+
+        // ============================================================
+        // Chart.js initialization
+        // ============================================================
+        function initCharts() {
+            if (!chartJsLoaded) {
+                dom.tempChartContainer.classList.add('hidden');
+                dom.humidityChartContainer.classList.add('hidden');
+                dom.tempFallback.classList.add('active');
+                dom.humidityFallback.classList.add('active');
+                return;
+            }
+
+            var commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(33, 37, 41, 0.9)',
+                        titleFont: { size: 12 },
+                        bodyFont: { size: 13 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: { display: false },
+                        ticks: {
+                            maxTicksLimit: 8,
+                            font: { size: 11 },
+                            color: '#6c757d',
+                            callback: function(value, index, ticks) {
+                                var label = this.getLabelForValue(value);
+                                if (!label) return '';
+                                var parts = label.split('T');
+                                if (parts.length < 2) return label;
+                                if (selectedHours > 48) {
+                                    return parts[0].substring(5) + ' ' + parts[1].substring(0, 5);
+                                }
+                                return parts[1].substring(0, 5);
+                            }
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(108, 117, 125, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: 11 },
+                            color: '#6c757d',
+                            padding: 8
+                        }
+                    }
+                },
+                elements: {
+                    point: { radius: 0, hoverRadius: 4 },
+                    line: { tension: 0.4, borderWidth: 2 }
+                }
+            };
+
+            var tempCtx = document.getElementById('tempChart').getContext('2d');
+            tempChartInstance = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: '#e76f51',
+                        backgroundColor: 'rgba(231, 111, 81, 0.15)',
+                        fill: true
+                    }]
+                },
+                options: Object.assign({}, commonOptions, {
+                    scales: Object.assign({}, commonOptions.scales, {
+                        y: Object.assign({}, commonOptions.scales.y, {
+                            ticks: Object.assign({}, commonOptions.scales.y.ticks, {
+                                callback: function(v) { return v + '°C'; }
+                            })
+                        })
+                    }),
+                    plugins: Object.assign({}, commonOptions.plugins, {
+                        tooltip: Object.assign({}, commonOptions.plugins.tooltip, {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return 'Temperature: ' + ctx.parsed.y.toFixed(1) + '°C';
+                                }
+                            }
+                        })
+                    })
+                })
+            });
+
+            var humCtx = document.getElementById('humidityChart').getContext('2d');
+            humidityChartInstance = new Chart(humCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        data: [],
+                        borderColor: '#457b9d',
+                        backgroundColor: 'rgba(69, 123, 157, 0.15)',
+                        fill: true
+                    }]
+                },
+                options: Object.assign({}, commonOptions, {
+                    scales: Object.assign({}, commonOptions.scales, {
+                        y: Object.assign({}, commonOptions.scales.y, {
+                            ticks: Object.assign({}, commonOptions.scales.y.ticks, {
+                                callback: function(v) { return v + '%'; }
+                            })
+                        })
+                    }),
+                    plugins: Object.assign({}, commonOptions.plugins, {
+                        tooltip: Object.assign({}, commonOptions.plugins.tooltip, {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return 'Humidity: ' + ctx.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        })
+                    })
+                })
+            });
+        }
+
+        // ============================================================
+        // Format helpers
+        // ============================================================
+        function formatTime(isoStr) {
+            if (!isoStr) return '--';
+            var parts = isoStr.split('T');
+            if (parts.length < 2) return isoStr;
+            return parts[1].substring(0, 8);
+        }
+
+        function timeAgo() {
+            return 'Updated just now';
+        }
+
+        // ============================================================
+        // Alert handling
+        // ============================================================
+        function updateAlerts(data) {
+            // Reset alert states
+            dom.tempCard.classList.remove('alert-warn', 'alert-critical');
+            dom.humidityCard.classList.remove('alert-warn', 'alert-critical');
+            dom.tempAlertBadge.className = 'alert-badge';
+            dom.tempAlertBadge.textContent = '';
+            dom.humidityAlertBadge.className = 'alert-badge';
+            dom.humidityAlertBadge.textContent = '';
+
+            if (!data.alerts || !data.alerts.length) return;
+
+            data.alerts.forEach(function(alert) {
+                if (alert.sensor === 'temperature') {
+                    dom.tempCard.classList.add(
+                        alert.level === 'critical' ? 'alert-critical' : 'alert-warn'
+                    );
+                    dom.tempAlertBadge.className = 'alert-badge ' +
+                        (alert.level === 'critical' ? 'critical' : 'warn');
+                    dom.tempAlertBadge.textContent =
+                        alert.level === 'critical' ? 'HIGH' : 'LOW';
+                } else if (alert.sensor === 'humidity') {
+                    dom.humidityCard.classList.add(
+                        alert.level === 'critical' ? 'alert-critical' : 'alert-warn'
+                    );
+                    dom.humidityAlertBadge.className = 'alert-badge ' +
+                        (alert.level === 'critical' ? 'critical' : 'warn');
+                    dom.humidityAlertBadge.textContent =
+                        alert.level === 'critical' ? 'HIGH' : 'LOW';
+                }
+            });
+        }
+
+        // ============================================================
+        // Update stat cards
+        // ============================================================
+        function updateStatus(data) {
+            var now = timeAgo();
+
+            dom.tempValue.innerHTML = data.temperature.toFixed(1) +
+                '<span class="stat-unit"> &deg;C</span>';
+            dom.tempUpdated.textContent = now;
+
+            dom.humidityValue.innerHTML = data.humidity.toFixed(1) +
+                '<span class="stat-unit"> %</span>';
+            dom.humidityUpdated.textContent = now;
+
+            dom.dewpointValue.innerHTML = data.dew_point.toFixed(1) +
+                '<span class="stat-unit"> &deg;C</span>';
+            dom.dewpointUpdated.textContent = now;
+
+            dom.lightValue.textContent = data.light ? 'ON' : 'OFF';
+            dom.lightUpdated.textContent = now;
+
+            // Alerts
+            updateAlerts(data);
+
+            // System info
+            dom.infoUptime.textContent = data.uptime || '--';
+            dom.infoLastUpdate.textContent = formatTime(data.timestamp);
+            dom.infoTargetTemp.textContent = (data.target_temp || '--') + ' °C';
+            dom.infoLightSchedule.textContent =
+                (data.light_on || '--').substring(0, 5) + ' – ' +
+                (data.light_off || '--').substring(0, 5);
+
+            if (data.thresholds) {
+                dom.infoThresholds.textContent =
+                    data.thresholds.temp_min + '-' + data.thresholds.temp_max + '°C, ' +
+                    data.thresholds.humidity_min + '-' + data.thresholds.humidity_max + '%';
+            }
+
+            if (data.fan) {
+                dom.infoFan.innerHTML = '<span class="fan-on">Running</span>';
+            } else {
+                dom.infoFan.innerHTML = '<span class="fan-off">Off</span>';
+            }
+
+            dom.infoMode.textContent = data.demo_mode ? 'Demo' : 'Production';
+
+            if (data.demo_mode) {
+                dom.demoBadge.classList.add('visible');
+            }
+
+            // Camera
+            var cacheBust = new Date().getTime();
+            dom.cameraImage.src = 'image.jpg?' + cacheBust;
+            dom.cameraTimestamp.textContent = formatTime(data.timestamp);
+            dom.cameraOverlayTime.textContent = formatTime(data.timestamp);
+        }
+
+        // ============================================================
+        // Update charts
+        // ============================================================
+        function updateCharts(histData) {
+            if (!chartJsLoaded || !tempChartInstance || !humidityChartInstance) return;
+            if (!histData || !histData.timestamps) return;
+
+            var labels = histData.timestamps;
+            var tempData = histData.temperature;
+            var humData = histData.humidity;
+
+            tempChartInstance.data.labels = labels;
+            tempChartInstance.data.datasets[0].data = tempData;
+            tempChartInstance.update('none');
+
+            humidityChartInstance.data.labels = labels;
+            humidityChartInstance.data.datasets[0].data = humData;
+            humidityChartInstance.update('none');
+        }
+
+        // ============================================================
+        // Update advisor panel
+        // ============================================================
+        function updateAdvisor(data) {
+            if (!data || !data.advice) return;
+
+            var items = data.advice;
+            var html = '';
+
+            if (items.length === 0) {
+                html = '<div class="advisor-empty">No data available for analysis yet.</div>';
+            } else {
+                items.forEach(function(item) {
+                    var severityClass = 'severity-' + (item.severity || 'ok');
+                    html += '<div class="advisor-item ' + severityClass + '">';
+                    html += '<div class="advisor-severity-dot"></div>';
+                    html += '<div class="advisor-content">';
+                    html += '<div class="advisor-title">' + escapeHtml(item.title) + '</div>';
+                    html += '<div class="advisor-message">' + escapeHtml(item.message) + '</div>';
+                    if (item.metric) {
+                        html += '<span class="advisor-metric">' + escapeHtml(item.metric) + '</span>';
+                    }
+                    html += '</div></div>';
+                });
+            }
+
+            dom.advisorGrid.innerHTML = html;
+
+            var count = items.length;
+            var hasCritical = items.some(function(i) { return i.severity === 'critical'; });
+            var hasWarning = items.some(function(i) { return i.severity === 'warning'; });
+            if (hasCritical) {
+                dom.advisorBadge.textContent = count + ' alert' + (count > 1 ? 's' : '');
+                dom.advisorBadge.style.background = 'rgba(231, 111, 81, 0.15)';
+                dom.advisorBadge.style.color = '#c0392b';
+            } else if (hasWarning) {
+                dom.advisorBadge.textContent = count + ' warning' + (count > 1 ? 's' : '');
+                dom.advisorBadge.style.background = 'rgba(233, 196, 106, 0.2)';
+                dom.advisorBadge.style.color = '#95700a';
+            } else {
+                dom.advisorBadge.textContent = 'All clear';
+                dom.advisorBadge.style.background = '';
+                dom.advisorBadge.style.color = '';
+            }
+
+            if (data.analyzed_at) {
+                dom.advisorTimestamp.textContent = 'Analyzed at ' + formatTime(data.analyzed_at);
+            }
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        // Data fetching
+        // ============================================================
+        function fetchJSON(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.timeout = 10000;
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            callback(null, data);
+                        } catch (e) {
+                            callback(e, null);
+                        }
+                    } else {
+                        callback(new Error('HTTP ' + xhr.status), null);
+                    }
+                }
+            };
+            xhr.ontimeout = function() {
+                callback(new Error('Timeout'), null);
+            };
+            xhr.onerror = function() {
+                callback(new Error('Network error'), null);
+            };
+            xhr.send();
+        }
+
+        function fetchHistory() {
+            fetchJSON('/api/history?hours=' + selectedHours, function(err, histData) {
+                if (!err && histData) {
+                    updateCharts(histData);
+                }
+            });
+        }
+
+        function fetchAdvisor() {
+            fetchJSON('/api/advisor', function(err, data) {
+                if (!err && data) {
+                    updateAdvisor(data);
+                }
+            });
+        }
+
+        function pollData() {
+            setStatus('connecting', 'Updating...');
+
+            fetchJSON('/api/status', function(err, statusData) {
+                if (err) {
+                    setStatus('offline', 'Disconnected');
+                    if (isFirstLoad) {
+                        dom.loadingOverlay.classList.add('hidden');
+                        isFirstLoad = false;
+                    }
+                    return;
+                }
+
+                setStatus('online', 'Connected');
+                updateStatus(statusData);
+
+                fetchHistory();
+                fetchAdvisor();
+
+                if (isFirstLoad) {
+                    dom.loadingOverlay.classList.add('hidden');
+                    isFirstLoad = false;
+                }
+            });
+        }
+
+        // ============================================================
+        // Initialization
+        // ============================================================
+        function init() {
+            chartJsLoaded = typeof Chart !== 'undefined';
+            initCharts();
+            setupTimeRangeButtons();
+            pollData();
+            pollTimer = setInterval(pollData, 30000);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+    </script>
+
 </body>
-</html> 
+</html>
